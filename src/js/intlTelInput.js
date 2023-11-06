@@ -52,6 +52,8 @@ const defaults = {
   separateDialCode: false,
   // option to hide the flags - must be used with separateDialCode, or allowDropdown=false
   showFlags: true,
+  // country search option
+  searchCountry: false,
   // specify the path to the libphonenumber script to enable validation/formatting
   utilsScript: ""
 };
@@ -372,7 +374,8 @@ class Iti {
       showFlags,
       customContainer,
       hiddenInput,
-      dropdownContainer
+      dropdownContainer,
+      searchCountry,
     } = this.options;
 
     // containers (mostly for positioning)
@@ -388,6 +391,9 @@ class Iti {
     }
     if (customContainer) {
       parentClass += ` ${customContainer}`;
+    }
+    if (searchCountry) {
+      parentClass += " iti--search-country";
     }
 
     const wrapper = this._createEl("div", { class: parentClass });
@@ -461,6 +467,13 @@ class Iti {
         role: "listbox",
         "aria-label": "List of countries"
       });
+      if (searchCountry) {
+        this.searchInput = this._createEl("input", {
+          "class": "iti__search_box",
+          id: "iti-search-country",
+          placeholder: "Search country by name"
+        }, this.countryList);
+      }
       if (this.preferredCountries.length) {
         this._appendListItems(this.preferredCountries, "iti__preferred", true);
         this._createEl(
@@ -821,6 +834,8 @@ class Iti {
     this.dropdownArrow.classList.add("iti__arrow--up");
 
     this._trigger("open:countrydropdown");
+
+    this.searchInput.focus();
   }
 
   // make sure the el has the className or not, depending on the value of shouldHaveClass
@@ -922,11 +937,15 @@ class Iti {
     // (except when this initial opening click is bubbling up)
     // we cannot just stopPropagation as it may be needed to close another instance
     let isOpening = true;
-    this._handleClickOffToClose = () => {
+    this._handleClickOffToClose = (e) => {
+      if(e.target.classList.contains('iti__search_box')) {
+        return false;
+      }
       if (!isOpening) {
         this._closeDropdown();
       }
       isOpening = false;
+      return true; // --new
     };
     document.documentElement.addEventListener(
       "click",
@@ -942,6 +961,7 @@ class Iti {
     this._handleKeydownOnDropdown = (e) => {
       // prevent down key from scrolling the whole page,
       // and enter key from submitting a form etc
+      const { searchCountry } = this.options;
       e.preventDefault();
 
       // up and down to navigate
@@ -961,19 +981,28 @@ class Iti {
       else if (e.key === "Escape") {
         this._closeDropdown();
       }
+      else if (e.key === "Backspace" && searchCountry === true) {
+        this._clearInputField(e);
+      } else if (searchCountry === true && (e.keyCode >= 96 && e.keyCode <= 105)) {
+          this._searchCountry(e);
+      }
       // alpha chars to perform search
       // regex allows one latin alpha char or space, based on https://stackoverflow.com/a/26900132/217866)
       else if (/^[a-zA-ZÀ-ÿа-яА-Я ]$/.test(e.key)) {
         // jump to countries that start with the query string
-        if (queryTimer) {
-          clearTimeout(queryTimer);
+        if(searchCountry) {
+          this._searchCountry(e);
+        } else {
+            if (queryTimer) {
+                clearTimeout(queryTimer);
+            }
+            query += e.key.toLowerCase();
+            this._searchForCountry(query);
+            // if the timer hits 1 second, reset the query
+            queryTimer = setTimeout(() => {
+                query = "";
+            }, 1e3);
         }
-        query += e.key.toLowerCase();
-        this._searchForCountry(query);
-        // if the timer hits 1 second, reset the query
-        queryTimer = setTimeout(() => {
-          query = "";
-        }, 1000);
       }
     };
     document.addEventListener("keydown", this._handleKeydownOnDropdown);
@@ -1016,6 +1045,35 @@ class Iti {
         this._scrollTo(listItem, true);
         break;
       }
+    }
+  }
+
+  _searchCountry(e) {
+    let i;
+    let listItem = null;
+    if(e.key !== 'Backspace' && e.key !== 'Delete') {
+      e.target.value += e.key;
+    }
+    for (i = 0; i < this.countries.length; i++) {
+        if (this._startsWith(this.countries[i].name, e.target.value)) {
+            listItem = this.countryList.querySelector("#iti-".concat(this.id, "__item-").concat(this.countries[i].iso2));
+        } else if (this._startsWith(this.countries[i].dialCode, e.target.value)) {
+            listItem = this.countryList.querySelector(`[data-dial-code='${this.countries[i].dialCode}'`);
+        }
+        // update highlighting and scroll
+        if(listItem) {
+            this._highlightListItem(listItem, false);
+            this._scrollTo(listItem, true);
+            break;
+        }
+    }
+  }
+
+  _clearInputField(e) {
+    const inputText = e.target.value;
+    if(inputText.length > 0) {
+        e.target.value = inputText.substring(0, inputText.length - 1);
+        this._searchCountry(e);
     }
   }
 
@@ -1364,6 +1422,7 @@ class Iti {
     }
 
     this._trigger("close:countrydropdown");
+    this.searchInput.value = '';
   }
 
   // check if an element is visible within it's container, else scroll until it is
