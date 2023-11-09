@@ -324,3 +324,21 @@ $mobilePopupMargin: 30px !default;
 .iti__flag.iti__np {
   background-color: transparent;
 }
+
+.iti__search_box {
+  position: fixed !important;
+  padding-left: 3px !important;
+  border: none;
+  outline: none;
+}
+
+[dir=rtl] .iti__search_box {
+  position: fixed !important;
+  padding-right: 3px !important;
+  border: none;
+  outline: none;
+}
+
+.iti__country-list:has(>.iti__search_box) > li:first-of-type {
+  margin-top: 40px !important;
+}
