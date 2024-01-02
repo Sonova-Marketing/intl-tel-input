@@ -54,6 +54,8 @@ const defaults = {
   showFlags: true,
   // country search option
   searchCountry: false,
+  // country search placeholder text (Default to - Search country by name)
+  searchPlaceholder: "Search country by name",
   // specify the path to the libphonenumber script to enable validation/formatting
   utilsScript: ""
 };
@@ -376,6 +378,7 @@ class Iti {
       hiddenInput,
       dropdownContainer,
       searchCountry,
+      searchPlaceholder,
     } = this.options;
 
     // containers (mostly for positioning)
@@ -471,7 +474,7 @@ class Iti {
         this.searchInput = this._createEl("input", {
           "class": "iti__search_box",
           id: "iti-search-country",
-          placeholder: "Search country by name"
+          placeholder: searchPlaceholder,
         }, this.countryList);
       }
       if (this.preferredCountries.length) {
@@ -988,7 +991,7 @@ class Iti {
       }
       // alpha chars to perform search
       // regex allows one latin alpha char or space, based on https://stackoverflow.com/a/26900132/217866)
-      else if (/^[a-zA-ZÀ-ÿа-яА-Я ]$/.test(e.key)) {
+      else if (/^[a-zA-ZÀ-ÿа-яА-Я0-9 ]$/.test(e.key)) {
         // jump to countries that start with the query string
         if(searchCountry) {
           this._searchCountry(e);
@@ -1054,18 +1057,34 @@ class Iti {
     if(e.key !== 'Backspace' && e.key !== 'Delete') {
       e.target.value += e.key;
     }
+
     for (i = 0; i < this.countries.length; i++) {
         if (this._startsWith(this.countries[i].name, e.target.value)) {
             listItem = this.countryList.querySelector("#iti-".concat(this.id, "__item-").concat(this.countries[i].iso2));
         } else if (this._startsWith(this.countries[i].dialCode, e.target.value)) {
             listItem = this.countryList.querySelector(`[data-dial-code='${this.countries[i].dialCode}'`);
         }
+
         // update highlighting and scroll
         if(listItem) {
-            this._highlightListItem(listItem, false);
-            this._scrollTo(listItem, true);
+            this._hilightAndScrollTo(listItem);
             break;
         }
+    }
+
+    // If country not found in starts with and also in country code the checking for contains (For supporting other languages than english)
+    if (listItem === null) {
+      for (i = 0; i < this.countries.length; i++) {
+        if (this._contains(this.countries[i].name, e.target.value)) {
+            listItem = this.countryList.querySelector("#iti-".concat(this.id, "__item-").concat(this.countries[i].iso2));
+        }
+
+        // update highlighting and scroll
+        if(listItem) {
+          this._hilightAndScrollTo(listItem);
+          break;
+        }
+      }
     }
   }
 
@@ -1079,7 +1098,18 @@ class Iti {
 
   // check if string a starts with string b
   _startsWith(a, b) {
-    return a.substr(0, b.length).toLowerCase() === b;
+    return a.substr(0, b.length).toLowerCase() === b.toLowerCase();
+  }
+
+  // check if string a contains string b
+  _contains(a, b) {
+    return a.toLowerCase().includes(b.toLowerCase());
+  }
+
+  // hilight and scroll to country
+  _hilightAndScrollTo(listItem) {
+    this._highlightListItem(listItem, false);
+    this._scrollTo(listItem, true);
   }
 
   // update the input's value to the given val (format first if possible)
