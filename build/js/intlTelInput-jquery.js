@@ -1,6 +1,6 @@
 /*
- * International Telephone Input v18.2.1
- * https://github.com/jackocnr/intl-tel-input.git
+ * International Telephone Input v18.2.3
+ * https://github.com/Sonova-Marketing/intl-tel-input/
  * Licensed under the MIT license
  */
 
@@ -163,6 +163,8 @@
         showFlags: true,
         // country search option
         searchCountry: false,
+        // country search placeholder text (Default to - Search country by name)
+        searchPlaceholder: "Search country by name",
         // specify the path to the libphonenumber script to enable validation/formatting
         utilsScript: ""
     };
@@ -423,7 +425,7 @@
                 if (!this.telInput.hasAttribute("autocomplete") && !(this.telInput.form && this.telInput.form.hasAttribute("autocomplete"))) {
                     this.telInput.setAttribute("autocomplete", "off");
                 }
-                var _this$options = this.options, allowDropdown = _this$options.allowDropdown, separateDialCode = _this$options.separateDialCode, showFlags = _this$options.showFlags, customContainer = _this$options.customContainer, hiddenInput = _this$options.hiddenInput, dropdownContainer = _this$options.dropdownContainer, searchCountry = _this$options.searchCountry;
+                var _this$options = this.options, allowDropdown = _this$options.allowDropdown, separateDialCode = _this$options.separateDialCode, showFlags = _this$options.showFlags, customContainer = _this$options.customContainer, hiddenInput = _this$options.hiddenInput, dropdownContainer = _this$options.dropdownContainer, searchCountry = _this$options.searchCountry, searchPlaceholder = _this$options.searchPlaceholder;
                 // containers (mostly for positioning)
                 var parentClass = "iti";
                 if (allowDropdown) {
@@ -499,7 +501,7 @@
                         this.searchInput = this._createEl("input", {
                             "class": "iti__search_box",
                             id: "iti-search-country",
-                            placeholder: "Search country by name"
+                            placeholder: searchPlaceholder
                         }, this.countryList);
                     }
                     if (this.preferredCountries.length) {
@@ -935,7 +937,7 @@
                         _this9._clearInputField(e);
                     } else if (searchCountry === true && e.keyCode >= 96 && e.keyCode <= 105) {
                         _this9._searchCountry(e);
-                    } else if (/^[a-zA-ZÀ-ÿа-яА-Я ]$/.test(e.key)) {
+                    } else if (/^[a-zA-ZÀ-ÿа-яА-Я0-9 ]$/.test(e.key)) {
                         // jump to countries that start with the query string
                         if (searchCountry) {
                             _this9._searchCountry(e);
@@ -1002,9 +1004,21 @@
                     }
                     // update highlighting and scroll
                     if (listItem) {
-                        this._highlightListItem(listItem, false);
-                        this._scrollTo(listItem, true);
+                        this._highlightAndScrollTo(listItem);
                         break;
+                    }
+                }
+                // If country not found in starts with and also in country code the checking for contains (For supporting other languages than english)
+                if (listItem === null) {
+                    for (i = 0; i < this.countries.length; i++) {
+                        if (this._contains(this.countries[i].name, e.target.value)) {
+                            listItem = this.countryList.querySelector("#iti-".concat(this.id, "__item-").concat(this.countries[i].iso2));
+                        }
+                        // update highlighting and scroll
+                        if (listItem) {
+                            this._highlightAndScrollTo(listItem);
+                            break;
+                        }
                     }
                 }
             }
@@ -1020,7 +1034,18 @@
         }, {
             key: "_startsWith",
             value: function _startsWith(a, b) {
-                return a.substr(0, b.length).toLowerCase() === b;
+                return a.substr(0, b.length).toLowerCase() === b.toLowerCase();
+            }
+        }, {
+            key: "_contains",
+            value: function _contains(a, b) {
+                return a.toLowerCase().includes(b.toLowerCase());
+            }
+        }, {
+            key: "_highlightAndScrollTo",
+            value: function _highlightAndScrollTo(listItem) {
+                this._highlightListItem(listItem, false);
+                this._scrollTo(listItem, true);
             }
         }, {
             key: "_updateValFromNumber",
@@ -1601,7 +1626,7 @@
     // default options
     intlTelInputGlobals.defaults = defaults;
     // version
-    intlTelInputGlobals.version = "18.2.1";
+    intlTelInputGlobals.version = "18.2.3";
     var pluginName = "intlTelInput";
     // A really lightweight plugin wrapper around the constructor,
     // preventing against multiple instantiations
