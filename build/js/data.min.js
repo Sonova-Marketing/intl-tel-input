@@ -1,5 +1,5 @@
 /*
- * International Telephone Input v18.2.2
+ * International Telephone Input v18.2.3
  * https://github.com/Sonova-Marketing/intl-tel-input/
  * Licensed under the MIT license
  */
