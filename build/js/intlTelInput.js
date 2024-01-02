@@ -999,7 +999,7 @@
                         }
                         // update highlighting and scroll
                         if (listItem) {
-                            this._hilightAndScrollTo(listItem);
+                            this._highlightAndScrollTo(listItem);
                             break;
                         }
                     }
@@ -1011,7 +1011,7 @@
                             }
                             // update highlighting and scroll
                             if (listItem) {
-                                this._hilightAndScrollTo(listItem);
+                                this._highlightAndScrollTo(listItem);
                                 break;
                             }
                         }
@@ -1037,8 +1037,8 @@
                     return a.toLowerCase().includes(b.toLowerCase());
                 }
             }, {
-                key: "_hilightAndScrollTo",
-                value: function _hilightAndScrollTo(listItem) {
+                key: "_highlightAndScrollTo",
+                value: function _highlightAndScrollTo(listItem) {
                     this._highlightListItem(listItem, false);
                     this._scrollTo(listItem, true);
                 }

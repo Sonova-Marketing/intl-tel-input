@@ -1067,7 +1067,7 @@ class Iti {
 
         // update highlighting and scroll
         if(listItem) {
-            this._hilightAndScrollTo(listItem);
+            this._highlightAndScrollTo(listItem);
             break;
         }
     }
@@ -1081,7 +1081,7 @@ class Iti {
 
         // update highlighting and scroll
         if(listItem) {
-          this._hilightAndScrollTo(listItem);
+          this._highlightAndScrollTo(listItem);
           break;
         }
       }
@@ -1106,8 +1106,8 @@ class Iti {
     return a.toLowerCase().includes(b.toLowerCase());
   }
 
-  // hilight and scroll to country
-  _hilightAndScrollTo(listItem) {
+  // _highlight and scroll to country
+  _highlightAndScrollTo(listItem) {
     this._highlightListItem(listItem, false);
     this._scrollTo(listItem, true);
   }
